@@ -41,6 +41,8 @@ namespace MoonPdfLib
 		public event EventHandler ZoomTypeChanged;
 		public event EventHandler ViewTypeChanged;
 		public event EventHandler PageRowDisplayChanged;
+        public event EventHandler ZoomOccured;
+        public event EventHandler PageChanged;
         public event EventHandler<PasswordRequiredEventArgs> PasswordRequired;
 
 		private ZoomType zoomType = ZoomType.Fixed;
@@ -157,7 +159,29 @@ namespace MoonPdfLib
 			resizeTimer = new DispatcherTimer();
 			resizeTimer.Interval = TimeSpan.FromMilliseconds(150);
 			resizeTimer.Tick += resizeTimer_Tick;
+
+            
 		}
+
+        int lastPageShown;
+
+        void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            RaisePageChanged();
+        }
+
+        void RaisePageChanged()
+        {
+            if (lastPageShown != this.GetCurrentPageNumber())
+            {
+                lastPageShown = this.GetCurrentPageNumber();
+                if (PageChanged != null)
+                {
+                    PageChanged(this, EventArgs.Empty);
+                }
+            }
+        }
+
 
 		void PdfViewerPanel_SizeChanged(object sender, SizeChangedEventArgs e)
 		{
@@ -230,6 +254,7 @@ namespace MoonPdfLib
             this.pageRowBounds = CalculatePageRowBounds(pageBounds, this.ViewType);
             this.TotalPages = pageBounds.Length;
             this.innerPanel.Load(source, password);
+            this.innerPanel.ScrollViewer.ScrollChanged += ScrollViewer_ScrollChanged;
         }
 
 		private PageRowBound[] CalculatePageRowBounds(Size[] singlePageBounds, ViewType viewType)
@@ -282,30 +307,40 @@ namespace MoonPdfLib
 		{
 			this.innerPanel.ZoomToWidth();
 			this.ZoomType = MoonPdfLib.ZoomType.FitToWidth;
+            if (ZoomOccured != null)
+                ZoomOccured(this, EventArgs.Empty);
 		}
 
 		public void ZoomToHeight()
 		{
 			this.innerPanel.ZoomToHeight();
 			this.ZoomType = ZoomType.FitToHeight;
+            if (ZoomOccured != null)
+                ZoomOccured(this, EventArgs.Empty);
 		}
 
 		public void ZoomIn()
 		{
             this.innerPanel.ZoomIn();
 			this.ZoomType = ZoomType.Fixed;
+            if (ZoomOccured != null)
+                ZoomOccured(this, EventArgs.Empty);
 		}
 
 		public void ZoomOut()
 		{
             this.innerPanel.ZoomOut();
 			this.ZoomType = ZoomType.Fixed;
+            if (ZoomOccured != null)
+                ZoomOccured(this, EventArgs.Empty);
 		}
 
 		public void Zoom(double zoomFactor)
 		{
             this.innerPanel.Zoom(zoomFactor);
 			this.ZoomType = ZoomType.Fixed;
+            if (ZoomOccured != null)
+                ZoomOccured(this, EventArgs.Empty);
 		}
 
         /// <summary>
@@ -319,16 +354,19 @@ namespace MoonPdfLib
 		public void GotoPreviousPage()
 		{
 			this.innerPanel.GotoPreviousPage();
+            RaisePageChanged();
 		}
 
 		public void GotoNextPage()
 		{
 			this.innerPanel.GotoNextPage();
+            RaisePageChanged();
 		}
 
 		public void GotoPage(int pageNumber)
 		{
 			this.innerPanel.GotoPage(pageNumber);
+            RaisePageChanged();
 		}
 
 		public void GotoFirstPage()

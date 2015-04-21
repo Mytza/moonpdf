@@ -56,6 +56,7 @@ namespace MoonPdf
 			moonPdfPanel.PageRowDisplayChanged += moonPdfPanel_PageDisplayChanged;
 			moonPdfPanel.PdfLoaded += moonPdfPanel_PdfLoaded;
             moonPdfPanel.PasswordRequired += moonPdfPanel_PasswordRequired;
+            moonPdfPanel.PageChanged += moonPdfPanel_PageChanged;
 
 			this.UpdatePageDisplayMenuItem();
 			this.UpdateZoomMenuItems();
@@ -63,6 +64,11 @@ namespace MoonPdf
 
 			this.Loaded += MainWindow_Loaded;
 		}
+
+        void moonPdfPanel_PageChanged(object sender, EventArgs e)
+        {
+            var currentPage = this.moonPdfPanel.GetCurrentPageNumber();
+        }
 
         void moonPdfPanel_PasswordRequired(object sender, PasswordRequiredEventArgs e)
         {
